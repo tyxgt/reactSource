@@ -87,7 +87,7 @@ describe('ReactFiberHostContext', () => {
       },
       supportsMutation: true,
     });
-
+    // NOTE： 入口
     const container = Renderer.createContainer(
       rootContext,
       ConcurrentRoot,

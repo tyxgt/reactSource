@@ -167,6 +167,7 @@ export type Update<S, A> = {
   next: Update<S, A>,
 };
 
+// tyx：该类型均用在限制quene的结构上
 export type UpdateQueue<S, A> = {
   pending: Update<S, A> | null,
   lanes: Lanes,
@@ -174,6 +175,21 @@ export type UpdateQueue<S, A> = {
   lastRenderedReducer: ((S, A) => S) | null,
   lastRenderedState: S | null,
 };
+
+// tyx：Hook的类型
+export type Hook = {
+  // tyx：保存在内存中的状态
+  memoizedState: any,
+  // tyx：hook.baseQueue中所有update对象合并之后的状态.
+  baseState: any,
+  // tyx：存储update对象的环形链表，只包括高于本次渲染优先级的update对象
+  baseQueue: Update<any, any> | null,
+  // tyx：存储update对象的环形链表，包括所有优先级的update对象
+  queue: any,
+  // tyx：next指针，指向链表中的下一个hook
+  next: Hook | null,
+};
+
 
 let didWarnAboutMismatchedHooksForComponent;
 let didWarnUncachedGetSnapshot: void | true;
@@ -184,14 +200,6 @@ if (__DEV__) {
   didWarnAboutUseWrappedInTryCatch = new Set<string | null>();
   didWarnAboutAsyncClientComponent = new Set<string | null>();
 }
-
-export type Hook = {
-  memoizedState: any,
-  baseState: any,
-  baseQueue: Update<any, any> | null,
-  queue: any,
-  next: Hook | null,
-};
 
 // The effect "instance" is a shared object that remains the same for the entire
 // lifetime of an effect. In Rust terms, a RefCell. We use it to store the
@@ -3466,7 +3474,7 @@ function entangleTransitionUpdate<S, A>(
   }
 }
 
-function markUpdateInDevTools<A>(fiber: Fiber, lane: Lane, action: A): void {
+function markUpdateInDevTools<>(fiber: Fiber, lane: Lane, action: A): void {
   if (__DEV__) {
     if (enableDebugTracing) {
       if (fiber.mode & DebugTracingMode) {
@@ -3481,6 +3489,7 @@ function markUpdateInDevTools<A>(fiber: Fiber, lane: Lane, action: A): void {
   }
 }
 
+// tyx：当hooks不是函数内部调用的时候，调用这个hooks对象下的hooks，所以报错。
 export const ContextOnlyDispatcher: Dispatcher = {
   readContext,
 
@@ -3519,6 +3528,7 @@ if (enableAsyncActions) {
   (ContextOnlyDispatcher: Dispatcher).useOptimistic = throwInvalidHookError;
 }
 
+// tyx：函数组件初始化用的 hooks
 const HooksDispatcherOnMount: Dispatcher = {
   readContext,
 
@@ -3557,6 +3567,7 @@ if (enableAsyncActions) {
   (HooksDispatcherOnMount: Dispatcher).useOptimistic = mountOptimistic;
 }
 
+// tyx：函数组件更新用的 hooks
 const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
 
@@ -3595,6 +3606,7 @@ if (enableAsyncActions) {
   (HooksDispatcherOnUpdate: Dispatcher).useOptimistic = updateOptimistic;
 }
 
+// tyx：函数组件重新渲染用的 hooks
 const HooksDispatcherOnRerender: Dispatcher = {
   readContext,
 

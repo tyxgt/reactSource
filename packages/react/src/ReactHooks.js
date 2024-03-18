@@ -21,6 +21,7 @@ import ReactCurrentCache from './ReactCurrentCache';
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
+// tyx：这里的 useXXX 都是通过 resolveDispatcher 获取到当前的 dispatcher，然后调用 dispatcher 上的对应方法
 function resolveDispatcher() {
   const dispatcher = ReactCurrentDispatcher.current;
   if (__DEV__) {

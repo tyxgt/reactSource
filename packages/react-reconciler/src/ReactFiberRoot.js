@@ -130,6 +130,7 @@ function FiberRootNode(
   }
 }
 
+// tyx：创建FiberRoot
 export function createFiberRoot(
   containerInfo: Container,
   tag: RootTag,
@@ -148,6 +149,7 @@ export function createFiberRoot(
   formState: ReactFormState<any, any> | null,
 ): FiberRoot {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+  // tyx：创建一个FiberRoot的节点
   const root: FiberRoot = (new FiberRootNode(
     containerInfo,
     tag,
@@ -159,21 +161,21 @@ export function createFiberRoot(
   if (enableSuspenseCallback) {
     root.hydrationCallbacks = hydrationCallbacks;
   }
-
   if (enableTransitionTracing) {
     root.transitionCallbacks = transitionCallbacks;
   }
-
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
+  // tyx： 一个未初始化的fiber
   const uninitializedFiber = createHostRootFiber(
     tag,
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
   );
+  // tyx：root就是一个FiberRoot节点
+  // tyx：重点👀
   root.current = uninitializedFiber;
   uninitializedFiber.stateNode = root;
-
   if (enableCache) {
     const initialCache = createCache();
     retainCache(initialCache);
@@ -201,8 +203,6 @@ export function createFiberRoot(
     };
     uninitializedFiber.memoizedState = initialState;
   }
-
   initializeUpdateQueue(uninitializedFiber);
-
   return root;
 }

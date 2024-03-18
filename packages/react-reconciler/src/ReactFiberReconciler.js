@@ -242,6 +242,7 @@ function findHostInstanceWithWarning(
   return findHostInstance(component);
 }
 
+// NOTE
 export function createContainer(
   containerInfo: Container,
   tag: RootTag,

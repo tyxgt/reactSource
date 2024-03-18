@@ -448,6 +448,8 @@ export function resetWorkInProgress(
   return workInProgress;
 }
 
+
+// tyx： 创建HostRootFiber
 export function createHostRootFiber(
   tag: RootTag,
   isStrictMode: boolean,

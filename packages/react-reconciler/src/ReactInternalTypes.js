@@ -78,6 +78,7 @@ export type MemoCache = {
 
 // A Fiber is work on a Component that needs to be done or was done. There can
 // be more than one per component.
+// tyx: 定义了fiber对象的类型
 export type Fiber = {
   // These first fields are conceptually members of an Instance. This used to
   // be split into a separate type and intersected with the other Fiber fields,
@@ -359,6 +360,7 @@ export type FiberRoot = {
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
+// tyx：Dispatcher的类型定义
 export type Dispatcher = {
   use: <T>(Usable<T>) => T,
   readContext<T>(context: ReactContext<T>): T,
