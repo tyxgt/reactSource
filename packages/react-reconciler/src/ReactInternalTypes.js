@@ -91,6 +91,7 @@ export type Fiber = {
   // minimize the number of objects created during the initial render.
 
   // Tag identifying the type of fiber.
+  // tyx: fiber 标签 证明是什么类型fiber
   tag: WorkTag,
 
   // Unique identifier of this child.
@@ -360,7 +361,7 @@ export type FiberRoot = {
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
-// tyx：Dispatcher的类型定义
+// tyx: ☁️Hook-4 Dispatcher的类型定义，其中定义了hook以及使用方法
 export type Dispatcher = {
   use: <T>(Usable<T>) => T,
   readContext<T>(context: ReactContext<T>): T,

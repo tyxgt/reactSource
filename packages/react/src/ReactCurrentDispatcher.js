@@ -7,6 +7,7 @@
  * @flow
  */
 
+// tyx: ☁️Hook-3 查看resolveDispatcher中ReactCurrentDispatcher是做什么的
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 
 /**

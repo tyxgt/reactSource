@@ -2344,6 +2344,7 @@ function workLoopConcurrent() {
   }
 }
 
+// tyx：构造fiber树
 function performUnitOfWork(unitOfWork: Fiber): void {
   // The current, flushed, state of this fiber is the alternate. Ideally
   // nothing should rely on this, but relying on it here means that we don't

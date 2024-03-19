@@ -481,6 +481,7 @@ function areHookInputsEqual(
   return true;
 }
 
+// tyx：☁️Hook-12 renderWithHooks函数声明
 export function renderWithHooks<Props, SecondArg>(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -504,8 +505,9 @@ export function renderWithHooks<Props, SecondArg>(
 
     warnIfAsyncClientComponent(Component);
   }
-
+  // tyx：每一次执行函数组件之前，先清空状态 （用于存放hooks列表）
   workInProgress.memoizedState = null;
+  // tyx：每一次执行函数组件之前，先清空状态 （用于存放effects列表）
   workInProgress.updateQueue = null;
   workInProgress.lanes = NoLanes;
 
@@ -539,6 +541,8 @@ export function renderWithHooks<Props, SecondArg>(
       ReactCurrentDispatcher.current = HooksDispatcherOnMountInDEV;
     }
   } else {
+    // tyx：☁️Hook-9 HooksDispatcherOnMount & HooksDispatcherOnUpdate
+    // tyx: 判断当前分片任务中的current属性是否有任务，有的话执行更新，没有执行挂载
     ReactCurrentDispatcher.current =
       current === null || current.memoizedState === null
         ? HooksDispatcherOnMount
@@ -577,10 +581,12 @@ export function renderWithHooks<Props, SecondArg>(
     (workInProgress.mode & StrictLegacyMode) !== NoMode;
 
   shouldDoubleInvokeUserFnsInHooksDEV = shouldDoubleRenderDEV;
+  // tyx：执行我们真正函数组件，所有的hooks将依次执行。
   let children = Component(props, secondArg);
   shouldDoubleInvokeUserFnsInHooksDEV = false;
 
   // Check if there was a render phase update
+  // tyx: 判断是否在渲染阶段
   if (didScheduleRenderPhaseUpdateDuringThisPass) {
     // Keep rendering until the component stabilizes (there are no more render
     // phase updates).
@@ -623,6 +629,7 @@ function finishRenderingHooks<Props, SecondArg>(
 
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrance.
+  // tyx：将hooks变成第一种，防止hooks在函数组件外部调用，调用直接报错。
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
 
   // This check uses currentHook so that it works the same in DEV and prod bundles.
@@ -750,6 +757,7 @@ export function replaySuspendedComponentWithHooks<Props, SecondArg>(
   return children;
 }
 
+// tyx：☁️Hook-11 第四种存在于renderWithHooksAgain这个函数中
 function renderWithHooksAgain<Props, SecondArg>(
   workInProgress: Fiber,
   Component: (p: Props, arg: SecondArg) => any,
@@ -804,7 +812,7 @@ function renderWithHooksAgain<Props, SecondArg>(
       // Also validate hook order for cascading updates.
       hookTypesUpdateIndexDev = -1;
     }
-
+    // tyx：☁️Hook-10 第四种重新渲染的是在这里-HooksDispatcherOnRerender
     ReactCurrentDispatcher.current = __DEV__
       ? HooksDispatcherOnRerenderInDEV
       : HooksDispatcherOnRerender;
@@ -930,7 +938,9 @@ export function resetHooksOnUnwind(workInProgress: Fiber): void {
   thenableIndexCounter = 0;
   thenableState = null;
 }
-
+// tyx：hook与fiber是怎么建立联系的？
+// tyx：函数组件对应 fiber 用 memoizedState 保存 hooks 信息，每一个 hooks 执行都会产生一个 hooks 对象，
+// tyx：hooks对象中，保存着当前hooks的信息，不同hooks保存的形式不同。每一个hooks通过 next 链表建立起关系。
 function mountWorkInProgressHook(): Hook {
   const hook: Hook = {
     memoizedState: null,
@@ -944,9 +954,12 @@ function mountWorkInProgressHook(): Hook {
 
   if (workInProgressHook === null) {
     // This is the first hook in the list
+    // tyx：这是链表中的第一个Hook
     currentlyRenderingFiber.memoizedState = workInProgressHook = hook;
   } else {
     // Append to the end of the list
+    // tyx：表示链表中已经存在其他的Hook。在这种情况下，将新的Hook对象
+    // tyx：追加到链表的末尾，并更新 workInProgressHook 为新的 Hook 对象。
     workInProgressHook = workInProgressHook.next = hook;
   }
   return workInProgressHook;
@@ -3488,8 +3501,8 @@ function markUpdateInDevTools<>(fiber: Fiber, lane: Lane, action: A): void {
     markStateUpdateScheduled(fiber, lane);
   }
 }
-
-// tyx：当hooks不是函数内部调用的时候，调用这个hooks对象下的hooks，所以报错。
+// tyx：☁️Hook-5 在这里我们能看到四种对Hook的处理策略
+// tyx：☁️Hook-5 当hooks不是函数内部调用的时候，调用这个hooks对象下的hooks，所以报错。
 export const ContextOnlyDispatcher: Dispatcher = {
   readContext,
 
@@ -3528,10 +3541,10 @@ if (enableAsyncActions) {
   (ContextOnlyDispatcher: Dispatcher).useOptimistic = throwInvalidHookError;
 }
 
-// tyx：函数组件初始化用的 hooks
+// tyx：☁️Hook-6 函数组件初始化用的 hooks
 const HooksDispatcherOnMount: Dispatcher = {
   readContext,
-
+  
   use,
   useCallback: mountCallback,
   useContext: readContext,
@@ -3567,7 +3580,7 @@ if (enableAsyncActions) {
   (HooksDispatcherOnMount: Dispatcher).useOptimistic = mountOptimistic;
 }
 
-// tyx：函数组件更新用的 hooks
+// tyx：☁️Hook-7 函数组件更新用的 hooks
 const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
 
@@ -3606,7 +3619,7 @@ if (enableAsyncActions) {
   (HooksDispatcherOnUpdate: Dispatcher).useOptimistic = updateOptimistic;
 }
 
-// tyx：函数组件重新渲染用的 hooks
+// tyx：☁️Hook-8 函数组件重新渲染用的 hooks
 const HooksDispatcherOnRerender: Dispatcher = {
   readContext,
 

@@ -391,6 +391,7 @@ function forceUnmountCurrentAndReconcile(
   );
 }
 
+// tyx: renderWithHooks-这个函数是用来处理forwardref的组件的
 function updateForwardRef(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -1045,7 +1046,7 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
     }
   }
 }
-
+// tyx: renderWithHooks-这个函数是用来处理函数式的组件的
 function updateFunctionComponent(
   current: null | Fiber,
   workInProgress: Fiber,
@@ -1808,6 +1809,7 @@ function mountIncompleteClassComponent(
   );
 }
 
+// tyx: renderWithHooks-挂载尚未确定类型的组件
 function mountIndeterminateComponent(
   _current: null | Fiber,
   workInProgress: Fiber,
@@ -3943,6 +3945,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
   return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
 }
 
+// tyx： 深度调和子节点的时候
 function beginWork(
   current: Fiber | null,
   workInProgress: Fiber,

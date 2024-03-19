@@ -21,7 +21,7 @@ import ReactCurrentCache from './ReactCurrentCache';
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
-// tyx：这里的 useXXX 都是通过 resolveDispatcher 获取到当前的 dispatcher，然后调用 dispatcher 上的对应方法
+// tyx：☁️Hook-2 这里的 useXXX 都是通过 resolveDispatcher 获取到当前的 dispatcher，然后调用 dispatcher 上的对应方法
 function resolveDispatcher() {
   const dispatcher = ReactCurrentDispatcher.current;
   if (__DEV__) {
@@ -83,7 +83,7 @@ export function useContext<T>(Context: ReactContext<T>): T {
   }
   return dispatcher.useContext(Context);
 }
-
+// tyx: ☁️Hook-1: hook中都会创建一个对应的dispatcher对象，由这个对象再去调用对应的事件
 export function useState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
