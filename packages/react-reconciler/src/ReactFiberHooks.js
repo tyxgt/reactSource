@@ -483,13 +483,20 @@ function areHookInputsEqual(
 
 // tyx：☁️Hook-12 renderWithHooks函数声明
 export function renderWithHooks<Props, SecondArg>(
+  // tyx：当前的Fiber对象，初始挂载的时候为null
   current: Fiber | null,
+  // tyx：工作中的Fiber对象
   workInProgress: Fiber,
+  // tyx：组件函数，接受props和secondArg作为参数，并返回组件的渲染结果
   Component: (p: Props, arg: SecondArg) => any,
+  // tyx：组件的属性
   props: Props,
+  // tyx：第二个参数
   secondArg: SecondArg,
+  // tyx：下一次渲染的车道
   nextRenderLanes: Lanes,
 ): any {
+  
   renderLanes = nextRenderLanes;
   currentlyRenderingFiber = workInProgress;
 
@@ -510,23 +517,6 @@ export function renderWithHooks<Props, SecondArg>(
   // tyx：每一次执行函数组件之前，先清空状态 （用于存放effects列表）
   workInProgress.updateQueue = null;
   workInProgress.lanes = NoLanes;
-
-  // The following should have already been reset
-  // currentHook = null;
-  // workInProgressHook = null;
-
-  // didScheduleRenderPhaseUpdate = false;
-  // localIdCounter = 0;
-  // thenableIndexCounter = 0;
-  // thenableState = null;
-
-  // TODO Warn if no hooks are used at all during mount, then some are used during update.
-  // Currently we will identify the update render as a mount because memoizedState === null.
-  // This is tricky because it's valid for certain types of components (e.g. React.lazy)
-
-  // Using memoizedState to differentiate between mount/update only works if at least one stateful hook is used.
-  // Non-stateful hooks (e.g. context) don't get added to memoizedState,
-  // so memoizedState would be null during updates and mounts.
   if (__DEV__) {
     if (current !== null && current.memoizedState !== null) {
       ReactCurrentDispatcher.current = HooksDispatcherOnUpdateInDEV;
@@ -575,6 +565,9 @@ export function renderWithHooks<Props, SecondArg>(
   // come from the same component invocation as the output.
   //
   // There are plenty of tests to ensure this behavior is correct.
+  // tyx：处理严格模式下的双重渲染：
+  // tyx：在严格模式下，组件函数会被双重调用以帮助检测副作用
+  // tyx：在第一次调用时，用户函数会被双重调用；而在第二次调用时，不会进行双重调用
   const shouldDoubleRenderDEV =
     __DEV__ &&
     debugRenderPhaseSideEffectsForStrictMode &&
@@ -598,6 +591,7 @@ export function renderWithHooks<Props, SecondArg>(
     );
   }
 
+  // tyx：如果处于开发环境回进行双重渲染
   if (shouldDoubleRenderDEV) {
     // In development, components are invoked twice to help detect side effects.
     setIsStrictModeForDevtools(true);
@@ -613,6 +607,7 @@ export function renderWithHooks<Props, SecondArg>(
     }
   }
 
+  // tyx：调用finishRenderingHooks完成hook的渲染处理
   finishRenderingHooks(current, workInProgress, Component);
 
   return children;
