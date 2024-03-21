@@ -159,15 +159,17 @@ import {
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
 export type Update<S, A> = {
+  // NOTE：update所属的优先级
   lane: Lane,
   revertLane: Lane,
+  // NOTE: 更新的action
   action: A,
   hasEagerState: boolean,
   eagerState: S | null,
+  // NOTE：与同一个Hook的其他更新形成链表
   next: Update<S, A>,
 };
-
-// tyx：该类型均用在限制quene的结构上
+// NOTE：该类型均用在限制quene的结构上
 export type UpdateQueue<S, A> = {
   pending: Update<S, A> | null,
   lanes: Lanes,
@@ -175,18 +177,18 @@ export type UpdateQueue<S, A> = {
   lastRenderedReducer: ((S, A) => S) | null,
   lastRenderedState: S | null,
 };
-
-// tyx：Hook的类型
+// tyx：1——Hook的类型
 export type Hook = {
-  // tyx：保存在内存中的状态
+  // NOTE：保存在内存中的状态，Hooks链表中保存的单一hook对应的数据
   memoizedState: any,
-  // tyx：hook.baseQueue中所有update对象合并之后的状态.
+  // NOTE：hook.baseQueue中所有update对象合并之后的状态.
   baseState: any,
-  // tyx：存储update对象的环形链表，只包括高于本次渲染优先级的update对象
+  // NOTE：存储update对象的环形链表，只包括高于本次渲染优先级的update对象
   baseQueue: Update<any, any> | null,
-  // tyx：存储update对象的环形链表，包括所有优先级的update对象
+  // NOTE：存储update对象的环形链表，包括所有优先级的update对象
+  // NOTE：其实这个的类型是UpdateQueue | null，我们可以在3466行中看到
   queue: any,
-  // tyx：next指针，指向链表中的下一个hook
+  // NOTE：next指针，指向链表中的下一个hook
   next: Hook | null,
 };
 
@@ -481,23 +483,25 @@ function areHookInputsEqual(
   return true;
 }
 
-// tyx：☁️Hook-12 renderWithHooks函数声明
+// tyx：5——renderWithHooks函数声明
 export function renderWithHooks<Props, SecondArg>(
-  // tyx：当前的Fiber对象，初始挂载的时候为null
+  // NOTE：当前的Fiber对象，初始挂载的时候为null
   current: Fiber | null,
-  // tyx：工作中的Fiber对象
+  // NOTE：工作中的Fiber对象
   workInProgress: Fiber,
-  // tyx：组件函数，接受props和secondArg作为参数，并返回组件的渲染结果
+  // NOTE：组件函数，接受props和secondArg作为参数，并返回组件的渲染结果
   Component: (p: Props, arg: SecondArg) => any,
-  // tyx：组件的属性
+  // NOTE：组件的属性
   props: Props,
-  // tyx：第二个参数
+  // NOTE：第二个参数
   secondArg: SecondArg,
-  // tyx：下一次渲染的车道
+  // NOTE：下一次渲染的车道
   nextRenderLanes: Lanes,
 ): any {
-  
+  // NOTE：1.设置全局变量
+  // NOTE：设置当前渲染优先级
   renderLanes = nextRenderLanes;
+  // NOTE：设置当前fiber节点，也就是function组件对应的fiber节点
   currentlyRenderingFiber = workInProgress;
 
   if (__DEV__) {
@@ -512,9 +516,10 @@ export function renderWithHooks<Props, SecondArg>(
 
     warnIfAsyncClientComponent(Component);
   }
-  // tyx：每一次执行函数组件之前，先清空状态 （用于存放hooks列表）
+  // NOTE：清除当前fiber的遗留状态
+  // NOTE：每一次执行函数组件之前，先清空状态 （用于存放hooks列表）
   workInProgress.memoizedState = null;
-  // tyx：每一次执行函数组件之前，先清空状态 （用于存放effects列表）
+  // NOTE：每一次执行函数组件之前，先清空状态 （用于存放effects列表）
   workInProgress.updateQueue = null;
   workInProgress.lanes = NoLanes;
   if (__DEV__) {
@@ -531,8 +536,9 @@ export function renderWithHooks<Props, SecondArg>(
       ReactCurrentDispatcher.current = HooksDispatcherOnMountInDEV;
     }
   } else {
-    // tyx：☁️Hook-9 HooksDispatcherOnMount & HooksDispatcherOnUpdate
-    // tyx: 判断当前分片任务中的current属性是否有任务，有的话执行更新，没有执行挂载
+    // NOTE：2. 调用Function，生成子级ReactElement对象
+    // NOTE：☁️Hook-9 HooksDispatcherOnMount & HooksDispatcherOnUpdate
+    // NOTE: 制定dispatcher判断当前分片任务中的current属性是否有任务，有的话执行更新，没有执行挂载
     ReactCurrentDispatcher.current =
       current === null || current.memoizedState === null
         ? HooksDispatcherOnMount
@@ -565,21 +571,22 @@ export function renderWithHooks<Props, SecondArg>(
   // come from the same component invocation as the output.
   //
   // There are plenty of tests to ensure this behavior is correct.
-  // tyx：处理严格模式下的双重渲染：
-  // tyx：在严格模式下，组件函数会被双重调用以帮助检测副作用
-  // tyx：在第一次调用时，用户函数会被双重调用；而在第二次调用时，不会进行双重调用
+
+  // NOTE：处理严格模式下的双重渲染：
+  // NOTE：在严格模式下，组件函数会被双重调用以帮助检测副作用
+  // NOTE：在第一次调用时，用户函数会被双重调用；而在第二次调用时，不会进行双重调用
   const shouldDoubleRenderDEV =
     __DEV__ &&
     debugRenderPhaseSideEffectsForStrictMode &&
     (workInProgress.mode & StrictLegacyMode) !== NoMode;
 
   shouldDoubleInvokeUserFnsInHooksDEV = shouldDoubleRenderDEV;
-  // tyx：执行我们真正函数组件，所有的hooks将依次执行。
+  // NOTE：执行我们真正函数组件，所有的hooks将依次执行。
   let children = Component(props, secondArg);
   shouldDoubleInvokeUserFnsInHooksDEV = false;
 
   // Check if there was a render phase update
-  // tyx: 判断是否在渲染阶段
+  // NOTE: 判断是否在渲染阶段
   if (didScheduleRenderPhaseUpdateDuringThisPass) {
     // Keep rendering until the component stabilizes (there are no more render
     // phase updates).
@@ -591,7 +598,7 @@ export function renderWithHooks<Props, SecondArg>(
     );
   }
 
-  // tyx：如果处于开发环境回进行双重渲染
+  // NOTE：如果处于开发环境回进行双重渲染
   if (shouldDoubleRenderDEV) {
     // In development, components are invoked twice to help detect side effects.
     setIsStrictModeForDevtools(true);
@@ -607,7 +614,8 @@ export function renderWithHooks<Props, SecondArg>(
     }
   }
 
-  // tyx：调用finishRenderingHooks完成hook的渲染处理
+  // NOTE：3. 重置全局变量,并返回
+  // NOTE：调用finishRenderingHooks完成hook的渲染处理，还原被修改的全局变量，不影响下次调用
   finishRenderingHooks(current, workInProgress, Component);
 
   return children;
@@ -624,7 +632,7 @@ function finishRenderingHooks<Props, SecondArg>(
 
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrance.
-  // tyx：将hooks变成第一种，防止hooks在函数组件外部调用，调用直接报错。
+  // NOTE：将hooks变成第一种，防止hooks在函数组件外部调用，调用直接报错。
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
 
   // This check uses currentHook so that it works the same in DEV and prod bundles.
@@ -752,7 +760,7 @@ export function replaySuspendedComponentWithHooks<Props, SecondArg>(
   return children;
 }
 
-// tyx：☁️Hook-11 第四种存在于renderWithHooksAgain这个函数中
+// NOTE：☁️Hook-11 第四种存在于renderWithHooksAgain这个函数中
 function renderWithHooksAgain<Props, SecondArg>(
   workInProgress: Fiber,
   Component: (p: Props, arg: SecondArg) => any,
@@ -807,7 +815,7 @@ function renderWithHooksAgain<Props, SecondArg>(
       // Also validate hook order for cascading updates.
       hookTypesUpdateIndexDev = -1;
     }
-    // tyx：☁️Hook-10 第四种重新渲染的是在这里-HooksDispatcherOnRerender
+    // NOTE：☁️Hook-10 第四种重新渲染的是在这里-HooksDispatcherOnRerender
     ReactCurrentDispatcher.current = __DEV__
       ? HooksDispatcherOnRerenderInDEV
       : HooksDispatcherOnRerender;
@@ -933,9 +941,9 @@ export function resetHooksOnUnwind(workInProgress: Fiber): void {
   thenableIndexCounter = 0;
   thenableState = null;
 }
-// tyx：hook与fiber是怎么建立联系的？
-// tyx：函数组件对应 fiber 用 memoizedState 保存 hooks 信息，每一个 hooks 执行都会产生一个 hooks 对象，
-// tyx：hooks对象中，保存着当前hooks的信息，不同hooks保存的形式不同。每一个hooks通过 next 链表建立起关系。
+// tyx：7——hook与fiber是怎么建立联系的？
+// NOTE：函数组件对应 fiber 用 memoizedState 保存 hooks 信息，每一个 hooks 执行都会产生一个 hooks 对象，
+// NOTE：hooks对象中，保存着当前hooks的信息，不同hooks保存的形式不同。每一个hooks通过 next 链表建立起关系。
 function mountWorkInProgressHook(): Hook {
   const hook: Hook = {
     memoizedState: null,
@@ -949,12 +957,12 @@ function mountWorkInProgressHook(): Hook {
 
   if (workInProgressHook === null) {
     // This is the first hook in the list
-    // tyx：这是链表中的第一个Hook
+    // NOTE：这是链表中的第一个Hook
     currentlyRenderingFiber.memoizedState = workInProgressHook = hook;
   } else {
     // Append to the end of the list
-    // tyx：表示链表中已经存在其他的Hook。在这种情况下，将新的Hook对象
-    // tyx：追加到链表的末尾，并更新 workInProgressHook 为新的 Hook 对象。
+    // NOTE：表示链表中已经存在其他的Hook。在这种情况下，将新的Hook对象
+    // NOTE：追加到链表的末尾，并更新 workInProgressHook 为新的 Hook 对象。
     workInProgressHook = workInProgressHook.next = hook;
   }
   return workInProgressHook;
@@ -2688,7 +2696,7 @@ function mountDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
 }
 
 const updateDebugValue = mountDebugValue;
-
+// tyx：6——在mount策略下面对应的函数中，都会执行mountWorkInProgressHook这个函数
 function mountCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
@@ -3435,21 +3443,30 @@ function isRenderPhaseUpdate(fiber: Fiber): boolean {
     (alternate !== null && alternate === currentlyRenderingFiber)
   );
 }
-
+// tyx:  2——用于在渲染阶段将更新操作添加到更新队列中。
 function enqueueRenderPhaseUpdate<S, A>(
+  // NOTE：更新队列
   queue: UpdateQueue<S, A>,
+  // NOTE：要添加的更新操作
   update: Update<S, A>,
 ): void {
   // This is a render phase update. Stash it in a lazily-created map of
   // queue -> linked list of updates. After this render pass, we'll restart
   // and apply the stashed updates on top of the work-in-progress hook.
+  // NOTE：首先函数将两个变量didScheduleRenderPhaseUpdateDuringThisPass，didScheduleRenderPhaseUpdate设置为true
+  // NOTE：这是为了在当前渲染的过程中标记已经安排在渲染阶段的更新，
+  // NOTE：这些更新将在当前渲染过程结束后重新启动，并应用于正在进行中的 Hook 上。
   didScheduleRenderPhaseUpdateDuringThisPass = didScheduleRenderPhaseUpdate =
     true;
+  // NOTE: 接下来，函数获取更新队列中的 pending 属性。
   const pending = queue.pending;
   if (pending === null) {
+    // NOTE：如果pending属性为null，则创建一个循环链表，并将更新操作添加到链表中。
     // This is the first update. Create a circular list.
     update.next = update;
   } else {
+    // NOTE：如果pending属性不为null，则将更新操作添加到链表中。
+    // NOTE：pending => update
     update.next = pending.next;
     pending.next = update;
   }
@@ -3496,8 +3513,8 @@ function markUpdateInDevTools<>(fiber: Fiber, lane: Lane, action: A): void {
     markStateUpdateScheduled(fiber, lane);
   }
 }
-// tyx：☁️Hook-5 在这里我们能看到四种对Hook的处理策略
-// tyx：☁️Hook-5 当hooks不是函数内部调用的时候，调用这个hooks对象下的hooks，所以报错。
+// tyx：4——在这里我们能看到四种对Hook的处理策略
+// NOTE：当hooks不是函数内部调用的时候，调用这个hooks对象下的hooks，所以报错。
 export const ContextOnlyDispatcher: Dispatcher = {
   readContext,
 
@@ -3536,7 +3553,7 @@ if (enableAsyncActions) {
   (ContextOnlyDispatcher: Dispatcher).useOptimistic = throwInvalidHookError;
 }
 
-// tyx：☁️Hook-6 函数组件初始化用的 hooks
+// tyx：4——函数组件初始化用的 hooks
 const HooksDispatcherOnMount: Dispatcher = {
   readContext,
   
@@ -3575,7 +3592,7 @@ if (enableAsyncActions) {
   (HooksDispatcherOnMount: Dispatcher).useOptimistic = mountOptimistic;
 }
 
-// tyx：☁️Hook-7 函数组件更新用的 hooks
+// tyx：4——函数组件更新用的 hooks
 const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
 
@@ -3614,7 +3631,7 @@ if (enableAsyncActions) {
   (HooksDispatcherOnUpdate: Dispatcher).useOptimistic = updateOptimistic;
 }
 
-// tyx：☁️Hook-8 函数组件重新渲染用的 hooks
+// tyx：4——函数组件重新渲染用的 hooks
 const HooksDispatcherOnRerender: Dispatcher = {
   readContext,
 

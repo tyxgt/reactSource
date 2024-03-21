@@ -2344,7 +2344,7 @@ function workLoopConcurrent() {
   }
 }
 
-// tyx：构造fiber树
+// tyx：8——构造fiber树
 function performUnitOfWork(unitOfWork: Fiber): void {
   // The current, flushed, state of this fiber is the alternate. Ideally
   // nothing should rely on this, but relying on it here means that we don't
@@ -2358,6 +2358,7 @@ function performUnitOfWork(unitOfWork: Fiber): void {
     next = beginWork(current, unitOfWork, entangledRenderLanes);
     stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, true);
   } else {
+    // NOTE：深度调和子节点
     next = beginWork(current, unitOfWork, entangledRenderLanes);
   }
 

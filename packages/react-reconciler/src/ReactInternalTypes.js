@@ -78,7 +78,7 @@ export type MemoCache = {
 
 // A Fiber is work on a Component that needs to be done or was done. There can
 // be more than one per component.
-// tyx: 定义了fiber对象的类型
+// tyx: 3——定义了fiber对象的类型
 export type Fiber = {
   // These first fields are conceptually members of an Instance. This used to
   // be split into a separate type and intersected with the other Fiber fields,
@@ -90,8 +90,9 @@ export type Fiber = {
   // alternate versions of the tree. We put this on a single object for now to
   // minimize the number of objects created during the initial render.
 
+  // NOTE：作为静态数据结构的属性
   // Tag identifying the type of fiber.
-  // tyx: fiber 标签 证明是什么类型fiber
+  // NOTE: fiber 标签 证明是什么类型fiber
   tag: WorkTag,
 
   // Unique identifier of this child.
@@ -99,12 +100,14 @@ export type Fiber = {
 
   // The value of element.type which is used to preserve the identity during
   // reconciliation of this child.
+  // NOTE：大部分情况同type，某些情况不同，比如FunctionComponent使用React.memo包裹
   elementType: any,
 
   // The resolved function/class/ associated with this fiber.
   type: any,
 
   // The local state associated with this fiber.
+  // NOTE：指向Fiber对应的真实DOM节点
   stateNode: any,
 
   // Conceptual aliases
@@ -117,6 +120,7 @@ export type Fiber = {
   // This is effectively the parent, but there can be multiple parents (two)
   // so this is only the parent of the thing we're currently processing.
   // It is conceptually the same as the return address of a stack frame.
+  // NOTE：用于连接其他Fiber节点形成Fiber树
   return: Fiber | null,
 
   // Singly Linked List Tree Structure.
@@ -133,6 +137,7 @@ export type Fiber = {
 
   refCleanup: null | (() => void),
 
+  // NOTE：作为动态的工作单元的属性
   // Input is the data coming into process this fiber. Arguments. Props.
   pendingProps: any, // This type will be more specific once we overload the tag.
   memoizedProps: any, // The props used to create the output.
@@ -141,9 +146,11 @@ export type Fiber = {
   updateQueue: mixed,
 
   // The state used to create the output
+  // NOTE：保存对应的Hooks链表
   memoizedState: any,
 
   // Dependencies (contexts, events) for this fiber, if it has any
+  // NOTE：该fiber节点所依赖的(contexts, events)等
   dependencies: Dependencies | null,
 
   // Bitfield that describes properties about the fiber and its subtree. E.g.
@@ -155,37 +162,50 @@ export type Fiber = {
   mode: TypeOfMode,
 
   // Effect
+  // NOTE：标志位
   flags: Flags,
+  // NOTE：替代16.x版本中的 firstEffect, nextEffect. 当设置了 enableNewReconciler=true才会启用
   subtreeFlags: Flags,
+  // NOTE：存储将要被删除的子节点. 当设置了 enableNewReconciler=true才会启用
   deletions: Array<Fiber> | null,
 
+  // NOTE：调度优先级相关的
+  // NOTE：本fiber节点的优先级
   lanes: Lanes,
+  //NOTE: 子节点的优先级
   childLanes: Lanes,
 
   // This is a pooled version of a Fiber. Every fiber that gets updated will
   // eventually have a pair. There are cases when we can clean up pairs to save
   // memory if we need to.
+  // NOTE：指向该fiber在另一次更新时对应的fiber
   alternate: Fiber | null,
 
   // Time spent rendering this Fiber and its descendants for the current update.
   // This tells us how well the tree makes use of sCU for memoization.
   // It is reset to 0 each time we render and only updated when we don't bailout.
   // This field is only set when the enableProfilerTimer flag is enabled.
+  // NOTE：性能统计相关(开启enableProfilerTimer后才会统计)
+  // NOTE：react-dev-tool会根据这些时间统计来评估性能
+  // NOTE：本次更新过程, 本节点以及子树所消耗的总时间
   actualDuration?: number,
 
   // If the Fiber is currently active in the "render" phase,
   // This marks the time at which the work began.
   // This field is only set when the enableProfilerTimer flag is enabled.
+  // NOTE：标记本fiber节点开始构建的时间
   actualStartTime?: number,
 
   // Duration of the most recent render time for this Fiber.
   // This value is not updated when we bailout for memoization purposes.
   // This field is only set when the enableProfilerTimer flag is enabled.
+  // NOTE：用于最近一次生成本fiber节点所消耗的时间
   selfBaseDuration?: number,
 
   // Sum of base times for all descendants of this Fiber.
   // This value bubbles up during the "complete" phase.
   // This field is only set when the enableProfilerTimer flag is enabled.
+  // NOTE：生成子树所消耗的时间的总和
   treeBaseDuration?: number,
 
   // Conceptual aliases

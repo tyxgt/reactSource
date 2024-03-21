@@ -1080,6 +1080,7 @@ function updateFunctionComponent(
     hasId = checkDidRenderIdHook();
     setIsRendering(false);
   } else {
+    // NOTE：updateFunctionComponent中的renderWithHooks函数是用来处理函数式组件的
     nextChildren = renderWithHooks(
       current,
       workInProgress,
@@ -3945,7 +3946,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
   return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
 }
 
-// tyx： 深度调和子节点的时候
+// tyx：9——深度调和子节点函数
 function beginWork(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -4059,6 +4060,7 @@ function beginWork(
         renderLanes,
       );
     }
+    // NOTE： 对于不同的组件执行不同的处理函数
     case FunctionComponent: {
       const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
